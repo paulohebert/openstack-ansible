@@ -1,0 +1,59 @@
+---
+- name: Configurar Servidor
+  hosts: all
+  tasks:
+    - name: Comentar entrada 127.0.1.1 em /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: '#127.0.1.1'
+        state: present
+        backrefs: yes
+
+    - name: Atualizar cache do APT e atualizar pacotes
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: yes
+        cache_valid_time: 3600
+
+    - name: Instalar pacotes necessários
+      ansible.builtin.apt:
+        name:
+          - bridge-utils
+          - debootstrap
+          - openssh-server
+          - tcpdump
+          - vlan
+          - python3
+          - chrony
+          - openvswitch-switch
+          - "linux-modules-extra-{{ ansible_kernel }}"
+        state: present
+
+    - name: Desabilitar configuração de rede do cloud-init
+      ansible.builtin.copy:
+        dest: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+        content: |
+          network: {config: disabled}
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Remover arquivo de configuração de rede padrão do cloud-init
+      ansible.builtin.file:
+        path: /etc/netplan/50-cloud-init.yaml
+        state: absent
+
+    - name: Configurar Netplan a partir do template
+      ansible.builtin.template:
+        src: templates/netplan.yaml.j2
+        dest: /etc/netplan/01-netcfg.yaml
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Aplicar Netplan
+
+  handlers:
+    - name: Aplicar Netplan
+      ansible.builtin.command: netplan apply
+      listen: Aplicar Netplan
