@@ -1,0 +1,545 @@
+{%- set floating_network = floating_network|default("public") %}
+{%- set image_name = image_name|default("^(cirros.*-disk|TestVM)$") %}
+{%- set flavor_name = flavor_name|default("m1.tiny") %}
+
+# m1.tiny m1.small m1.medium m1.large
+
+{%- set availability_zone = availability_zone|default("nova") %}
+
+{%- set enable_auth = enable_auth|default(true) %}
+{%- set enable_nova = enable_nova|default(true) %}
+{%- set enable_glance = enable_glance|default(true) %}
+{%- set enable_cinder = enable_cinder|default(true) %}
+{%- set enable_neutron = enable_neutron|default(true) %}
+
+{%- set load = load|default(30) %}
+
+{%- set enable_admin = enable_admin|default(true) %}
+
+---
+  version: 2
+  title: "OpenStack Benchmark"
+  subtasks:
+    #####   Keystone   #####
+    -
+      title: "Teste de desempenho de autenticação"
+      scenario:
+        Authenticate.keystone: {}
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    #####     Nova     #####
+    -
+      title: "Teste de desempenho das principais operações da VM no Nova (Criar/Excluir/Parar/Iniciar/Reiniciar)"
+      workloads:
+        # Flavor - m1.tiny
+        - scenario:
+            NovaServers.boot_and_bounce_server:
+              flavor:
+                name: "m1.tiny"
+              image:
+                name: "{{image_name}}"
+              availability_zone: "{{availability_zone}}"
+              force_delete: false
+              actions:
+                - hard_reboot: 1
+                - soft_reboot: 1
+                - stop_start: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.small
+        - scenario:
+            NovaServers.boot_and_bounce_server:
+              flavor:
+                name: "m1.small"
+              image:
+                name: "{{image_name}}"
+              availability_zone: "{{availability_zone}}"
+              force_delete: false
+              actions:
+                - hard_reboot: 1
+                - soft_reboot: 1
+                - stop_start: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.medium
+        - scenario:
+            NovaServers.boot_and_bounce_server:
+              flavor:
+                name: "m1.medium"
+              image:
+                name: "{{image_name}}"
+              availability_zone: "{{availability_zone}}"
+              force_delete: false
+              actions:
+                - hard_reboot: 1
+                - soft_reboot: 1
+                - stop_start: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.large
+        - scenario:
+            NovaServers.boot_and_bounce_server:
+              flavor:
+                name: "m1.large"
+              image:
+                name: "{{image_name}}"
+              availability_zone: "{{availability_zone}}"
+              force_delete: false
+              actions:
+                - hard_reboot: 1
+                - soft_reboot: 1
+                - stop_start: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho em obter o console interativo VNC da VM"
+      workloads:
+        # Flavor - m1.tiny
+        - scenario:
+            NovaServers.boot_and_get_console_url:
+              flavor:
+                name: "m1.tiny"
+              image:
+                name: "{{image_name}}"
+              console_type: "novnc"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.small
+        - scenario:
+            NovaServers.boot_and_get_console_url:
+              flavor:
+                name: "m1.small"
+              image:
+                name: "{{image_name}}"
+              console_type: "novnc"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.medium
+        - scenario:
+            NovaServers.boot_and_get_console_url:
+              flavor:
+                name: "m1.medium"
+              image:
+                name: "{{image_name}}"
+              console_type: "novnc"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.large
+        - scenario:
+            NovaServers.boot_and_get_console_url:
+              flavor:
+                name: "m1.large"
+              image:
+                name: "{{image_name}}"
+              console_type: "novnc"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho em iniciar uma VM num nó de computação disponível na zona de disponibilidade e, em seguida, migra a VM para outro nó de computação na mesma zona de disponibilidade"
+      workloads:
+        # Flavor - m1.tiny
+        - scenario:
+            NovaServers.boot_and_live_migrate_server:
+              flavor:
+                name: "m1.tiny"
+              image:
+                name: "{{image_name}}"
+              block_migration: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.small
+        - scenario:
+            NovaServers.boot_and_live_migrate_server:
+              flavor:
+                name: "m1.small"
+              image:
+                name: "{{image_name}}"
+              block_migration: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.medium
+        - scenario:
+            NovaServers.boot_and_live_migrate_server:
+              flavor:
+                name: "m1.medium"
+              image:
+                name: "{{image_name}}"
+              block_migration: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.large
+        - scenario:
+            NovaServers.boot_and_live_migrate_server:
+              flavor:
+                name: "m1.large"
+              image:
+                name: "{{image_name}}"
+              block_migration: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho em redimensionar uma VM de um flavor para outro"
+      workloads:
+        # Flavor - m1.tiny > m1.small
+        - scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: "m1.tiny"
+              image:
+                name: "{{image_name}}"
+              to_flavor: 
+                name: "m1.small"
+              confirm: true
+              force_delete: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.small > m1.medium
+        - scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: "m1.small"
+              image:
+                name: "{{image_name}}"
+              to_flavor: 
+                name: "m1.medium"
+              confirm: true
+              force_delete: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.medium > m1.large
+        - scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: "m1.medium"
+              image:
+                name: "{{image_name}}"
+              to_flavor: 
+                name: "m1.large"
+              confirm: true
+              force_delete: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.large > m1.medium
+        - scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: "m1.large"
+              image:
+                name: "{{image_name}}"
+              to_flavor: 
+                name: "m1.medium"
+              confirm: true
+              force_delete: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.medium > m1.small
+        - scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: "m1.medium"
+              image:
+                name: "{{image_name}}"
+              to_flavor: 
+                name: "m1.small"
+              confirm: true
+              force_delete: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Flavor - m1.small > m1.tiny
+        - scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: "m1.small"
+              image:
+                name: "{{image_name}}"
+              to_flavor: 
+                name: "m1.tiny"
+              confirm: true
+              force_delete: false
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    #####    Cinder    #####
+    -
+      title: "Teste de desempenho na criação e exclusão de volume no Cinder"
+      workloads:
+        # Tamanho - 50 GB
+        - scenario:
+            CinderVolumes.create_and_delete_volume:
+              size: 50
+              image:
+                name: "{{image_name}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 100 GB
+        - scenario:
+            CinderVolumes.create_and_delete_volume:
+              size: 100
+              image:
+                name: "{{image_name}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 200 GB
+        - scenario:
+            CinderVolumes.create_and_delete_volume:
+              size: 200
+              image:
+                name: "{{image_name}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho na criação e exclusão de um snapshot de um volume no Cinder"
+      scenario:
+        CinderVolumes.create_and_delete_snapshot:
+          force: true
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na criação e exclusão de um backup de um volume no Cinder"
+      workloads:
+        # Tamanho - 50 GB
+        - scenario:
+            CinderVolumes.create_and_restore_volume_backup:
+              size: 50
+              do_delete: True
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 100 GB
+        - scenario:
+            CinderVolumes.create_and_restore_volume_backup:
+              size: 100
+              do_delete: True
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 200 GB
+        - scenario:
+            CinderVolumes.create_and_restore_volume_backup:
+              size: 200
+              do_delete: True
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho na expansão da capacidade de um volume no Cinder"
+      workloads:
+        # Tamanho - 50 GB > 100 GB
+        - scenario:
+            CinderVolumes.create_and_extend_volume:
+              size: 50
+              new_size: 100
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 100 GB > 200 GB
+        - scenario:
+            CinderVolumes.create_and_extend_volume:
+              size: 100
+              new_size: 200
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho na anexação de um volume em uma VM"
+      workloads:
+        # Tamanho - 50 GB | tiny
+        - scenario:
+            CinderVolumes.create_and_attach_volume:
+              size: 50
+              flavor:
+                name: "m1.tiny"
+              image:
+                name: "{{image_name}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 100 GB | tiny
+        - scenario:
+            CinderVolumes.create_and_attach_volume:
+              size: 100
+              flavor:
+                name: "m1.tiny"
+              image:
+                name: "{{image_name}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 50 GB | large
+        - scenario:
+            CinderVolumes.create_and_attach_volume:
+              size: 50
+              flavor:
+                name: "m1.large"
+              image:
+                name: "{{image_name}}"
+              create_volume_params:
+                availability_zone: "{{availability_zone}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+         # Tamanho - 100 GB | large
+        - scenario:
+            CinderVolumes.create_and_attach_volume:
+              size: 100
+              flavor:
+                name: "m1.large"
+              image:
+                name: "{{image_name}}"
+              create_volume_params:
+                availability_zone: "{{availability_zone}}"
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+    -
+      title: "Teste de desempenho na criação de um volume a partir de um snapshot"
+      scenario:
+        CinderVolumes.create_volume_from_snapshot:
+          do_delete: True
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    #####   Neutron    #####
+    -
+      title: "Teste de desempenho na criação/exclusão de um ip flutuante no Neutron"
+      scenario:
+        NeutronNetworks.create_and_delete_floating_ips:
+          floating_network: "{{ floating_network }}"
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na associação/dissociação de um ip flutuante em uma VM"
+      scenario:
+        NeutronNetworks.associate_and_dissociate_floating_ips:
+          floating_network: "{{ floating_network }}"
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na criação/exclusão de uma rede virtual no Neutron"
+      scenario:
+        NeutronNetworks.create_and_delete_networks:
+          network_create_args: {}
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na criação/exclusão de uma porta em uma rede virtual"
+      scenario:
+        NeutronNetworks.create_and_delete_ports:
+          ports_per_network : 1
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na criação de uma porta em uma rede virtual e sua associação em uma VM"
+      scenario:
+        NeutronNetworks.create_and_bind_ports:
+          ports_per_network : 1
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na criação/exclusão de um roteador em uma rede virtual"
+      scenario:
+        NeutronNetworks.create_and_delete_routers:
+          subnet_cidr_start: "192.168.0.0/24"
+          subnets_per_network: 1
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na criação/exclusão de uma subrede em uma rede virtual no Neutron"
+      scenario:
+        NeutronNetworks.create_and_delete_subnets:
+          subnet_cidr_start: "192.168.0.0/24"
+          subnets_per_network: 1
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    #####   HTTP    #####
+    -
+      title: "Teste de desempenho na latência do dashboard horizon"
+      scenario:
+        HttpRequests.check_request:
+          url: "https://dashboard.narnuvi/horizon"
+          method: "GET"
+          status_code: 200
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
+    -
+      title: "Teste de desempenho na latência do dashboard skyline"
+      scenario:
+        HttpRequests.check_request:
+          url: "https://dashboard.narnuvi"
+          method: "GET"
+          status_code: 200
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: 1
