@@ -1,5 +1,5 @@
 {%- set floating_network = floating_network|default("public") %}
-{%- set image_name = image_name|default("^(cirros.*-disk|TestVM)$") %}
+{%- set image_name = image_name|default("ubuntu-24.04") %}
 {%- set flavor_name = flavor_name|default("m1.tiny") %}
 
 # m1.tiny m1.small m1.medium m1.large
@@ -153,52 +153,48 @@
               times: {{ load }}
               concurrency: 1
     -
-      title: "Teste de desempenho em iniciar uma VM num nó de computação disponível na zona de disponibilidade e, em seguida, migra a VM para outro nó de computação na mesma zona de disponibilidade"
+      title: "Teste de desempenho em iniciar uma VM num nó de computação e migrar a VM para outro nó na mesma zona de disponibilidade"
       workloads:
         # Flavor - m1.tiny
         - scenario:
-            NovaServers.boot_and_live_migrate_server:
+            NovaServers.boot_and_migrate_server:
               flavor:
                 name: "m1.tiny"
               image:
                 name: "{{image_name}}"
-              block_migration: false
           runner:
             constant:
               times: {{ load }}
               concurrency: 1
         # Flavor - m1.small
         - scenario:
-            NovaServers.boot_and_live_migrate_server:
+            NovaServers.boot_and_migrate_server:
               flavor:
                 name: "m1.small"
               image:
                 name: "{{image_name}}"
-              block_migration: false
           runner:
             constant:
               times: {{ load }}
               concurrency: 1
         # Flavor - m1.medium
         - scenario:
-            NovaServers.boot_and_live_migrate_server:
+            NovaServers.boot_and_migrate_server:
               flavor:
                 name: "m1.medium"
               image:
                 name: "{{image_name}}"
-              block_migration: false
           runner:
             constant:
               times: {{ load }}
               concurrency: 1
         # Flavor - m1.large
         - scenario:
-            NovaServers.boot_and_live_migrate_server:
+            NovaServers.boot_and_migrate_server:
               flavor:
                 name: "m1.large"
               image:
                 name: "{{image_name}}"
-              block_migration: false
           runner:
             constant:
               times: {{ load }}
@@ -332,43 +328,73 @@
               concurrency: 1
     -
       title: "Teste de desempenho na criação e exclusão de um snapshot de um volume no Cinder"
-      scenario:
-        CinderVolumes.create_and_delete_snapshot:
-          force: true
-      runner:
-        constant:
-          times: {{ load }}
-          concurrency: 1
-    -
-      title: "Teste de desempenho na criação e exclusão de um backup de um volume no Cinder"
       workloads:
         # Tamanho - 50 GB
         - scenario:
-            CinderVolumes.create_and_restore_volume_backup:
+            CinderVolumes.create_and_delete_snapshot:
+              force: true
+          contexts:
+            volumes:
               size: 50
-              do_delete: True
+              volumes_per_tenant: 1
           runner:
             constant:
               times: {{ load }}
               concurrency: 1
         # Tamanho - 100 GB
         - scenario:
-            CinderVolumes.create_and_restore_volume_backup:
+            CinderVolumes.create_and_delete_snapshot:
+              force: true
+          contexts:
+            volumes:
               size: 100
-              do_delete: True
+              volumes_per_tenant: 1
           runner:
             constant:
               times: {{ load }}
               concurrency: 1
         # Tamanho - 200 GB
         - scenario:
-            CinderVolumes.create_and_restore_volume_backup:
+            CinderVolumes.create_and_delete_snapshot:
+              force: true
+          contexts:
+            volumes:
               size: 200
-              do_delete: True
+              volumes_per_tenant: 1
           runner:
             constant:
               times: {{ load }}
               concurrency: 1
+#    -
+#      title: "Teste de desempenho na criação e exclusão de um backup de um volume no Cinder"
+#      workloads:
+#        # Tamanho - 50 GB
+#        - scenario:
+#            CinderVolumes.create_and_restore_volume_backup:
+#              size: 50
+#              do_delete: True
+#          runner:
+#            constant:
+#              times: {{ load }}
+#              concurrency: 1
+#        # Tamanho - 100 GB
+#        - scenario:
+#            CinderVolumes.create_and_restore_volume_backup:
+#              size: 100
+#              do_delete: True
+#          runner:
+#            constant:
+#              times: {{ load }}
+#              concurrency: 1
+#        # Tamanho - 200 GB
+#        - scenario:
+#            CinderVolumes.create_and_restore_volume_backup:
+#              size: 200
+#              do_delete: True
+#          runner:
+#            constant:
+#              times: {{ load }}
+#              concurrency: 1
     -
       title: "Teste de desempenho na expansão da capacidade de um volume no Cinder"
       workloads:
@@ -447,13 +473,43 @@
               concurrency: 1
     -
       title: "Teste de desempenho na criação de um volume a partir de um snapshot"
-      scenario:
-        CinderVolumes.create_volume_from_snapshot:
-          do_delete: True
-      runner:
-        constant:
-          times: {{ load }}
-          concurrency: 1
+      workloads:
+        # Tamanho - 50 GB
+        - scenario:
+            CinderVolumes.create_volume_from_snapshot:
+              do_delete: True
+          contexts:
+            volumes:
+              size: 50
+              volumes_per_tenant: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 100 GB
+        - scenario:
+            CinderVolumes.create_volume_from_snapshot:
+              do_delete: True
+          contexts:
+            volumes:
+              size: 100
+              volumes_per_tenant: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
+        # Tamanho - 200 GB
+        - scenario:
+            CinderVolumes.create_volume_from_snapshot:
+              do_delete: True
+          contexts:
+            volumes:
+              size: 200
+              volumes_per_tenant: 1
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: 1
     #####   Neutron    #####
     -
       title: "Teste de desempenho na criação/exclusão de um ip flutuante no Neutron"
@@ -496,6 +552,10 @@
       scenario:
         NeutronNetworks.create_and_bind_ports:
           ports_per_network : 1
+      contexts:
+        network:
+          networks_per_tenant: 1
+        networking_agents: {}
       runner:
         constant:
           times: {{ load }}
@@ -525,7 +585,7 @@
       title: "Teste de desempenho na latência do dashboard horizon"
       scenario:
         HttpRequests.check_request:
-          url: "https://dashboard.narnuvi/horizon"
+          url: "https://10.10.0.1/horizon"
           method: "GET"
           status_code: 200
       runner:
@@ -536,7 +596,7 @@
       title: "Teste de desempenho na latência do dashboard skyline"
       scenario:
         HttpRequests.check_request:
-          url: "https://dashboard.narnuvi"
+          url: "https://10.10.0.1"
           method: "GET"
           status_code: 200
       runner:
