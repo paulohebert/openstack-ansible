@@ -112,6 +112,12 @@
               image:
                 name: "{{image_name}}"
               console_type: "novnc"
+          contexts:
+            quotas:
+              nova:
+                instances: -1
+                cores: -1
+                ram: -1
           runner:
             constant:
               times: {{ load }}
@@ -124,6 +130,12 @@
               image:
                 name: "{{image_name}}"
               console_type: "novnc"
+          contexts:
+            quotas:
+              nova:
+                instances: -1
+                cores: -1
+                ram: -1
           runner:
             constant:
               times: {{ load }}
@@ -136,6 +148,12 @@
               image:
                 name: "{{image_name}}"
               console_type: "novnc"
+          contexts:
+            quotas:
+              nova:
+                instances: -1
+                cores: -1
+                ram: -1
           runner:
             constant:
               times: {{ load }}
@@ -148,6 +166,12 @@
               image:
                 name: "{{image_name}}"
               console_type: "novnc"
+          contexts:
+            quotas:
+              nova:
+                instances: -1
+                cores: -1
+                ram: -1
           runner:
             constant:
               times: {{ load }}
@@ -525,6 +549,14 @@
       scenario:
         NeutronNetworks.associate_and_dissociate_floating_ips:
           floating_network: "{{ floating_network }}"
+      contexts:
+        quotas:
+          neutron:
+            floatingip: -1
+            network: -1
+            port: -1
+            router: -1
+            subnet: -1
       runner:
         constant:
           times: {{ load }}
